@@ -1,0 +1,158 @@
+<html>
+  <head>
+    <script src="http://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script>
+
+      color = ["cyan","pink","red","orange"];
+      s = new WebSocket("ws://"+location.hostname+":" + location.port);
+
+      s.onopen = function(){
+        console.log('Socket Open');
+        $("#ghost").attr('src',"/images/red.gif").data('color','red');
+      }
+
+      s.onclose = function(){
+        $("#ghost").attr('src',"/images/dead2.gif");
+      }
+
+      s.onmessage = function(m){
+        var d = JSON.parse(m.data);
+        addMessage(d.message, d.color);
+      }
+
+      function addMessage(message,color) {
+        $("#messages").append(
+          $(document.createElement('li')).html(message).addClass(color)
+        );
+
+        if($("#messages li").length > 10 ){
+          var m = $("#messages li")[0];
+          $(m).fadeOut(function(){
+            this.remove()
+          });
+        }
+      };
+
+      function switchGhost() {
+        if(s.readyState == 1){
+
+          // var current = color.indexOf($("#ghost").attr('src').split("/")[1])
+          var current = color.indexOf($("#ghost").data('color'));
+          var next = (current == 3) ? color[0] : color[current + 1];
+          $("#ghost").attr('src',"images/" + next + ".gif").data('color',next);
+        }
+      }
+
+      function sendMessage(ev){
+
+        var d = {
+          "message": $("#message").val(),
+          "color":$("#ghost").data('color')
+        }
+
+        $.ajax({
+          type:"POST",
+          contentType:"application/json; charset=utf-8",
+          url:"/message",
+          data: JSON.stringify(d),
+          success:function(r){
+            $("#message").val("")
+            $("#response").html(r);
+            setTimeout(function(){
+              $("#response").html("")
+            }, 5000);
+          }
+        });
+      }
+    </script>
+    <style>
+      #center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #messages {
+        width: 50%;
+        margin-top: 50px;
+        overflow-x: hidden;
+      }
+
+      li{
+         list-style: none;
+         position: relative;
+         width: 100%;
+      }
+      li:before{
+         content: '';
+         display: inline-block;
+         height: 20px;
+         width: 20px;
+         background-size: 20px;
+         margin-right: 5px;
+
+      }
+
+      li.red:before{
+        background-image: url("/images/red.gif");
+      }
+      li.pink:before{
+        background-image: url("/images/pink.gif");
+      }
+      li.cyan:before{
+        background-image: url("/images/cyan.gif");
+      }
+      li.orange:before{
+        background-image: url("/images/orange.gif");
+      }
+
+      li {
+        animation-duration: 2.5s;
+        animation-name: slidein;
+      }
+
+      li:before {
+        animation-duration: 2.5s;
+        animation-name: flipGhost;
+      }
+
+
+      @keyframes slidein {
+        from {
+          margin-left: 100%;
+          /*width: 300%;*/
+        }
+
+        to {
+          margin-left: 0%;
+          /*width: 100%;*/
+        }
+      }
+
+      @keyframes flipGhost {
+        from {
+          /*transform: scaleX(1);*/
+          transform: scaleX(-1);
+        }
+
+        to {
+          transform: scaleX(-1);
+        }
+      }
+
+    </style>
+  </head>
+  <body>
+
+    <div id="center">
+      <h3>Ghost Message!</h3>
+      <form onsubmit="sendMessage(); return false;">
+        <input id="message" />
+        <input type="submit" value="Send message" />
+      </form>
+      <img id="ghost" onclick="switchGhost()" src="images/dead.gif"/>
+      <ul id="messages">
+      </ul>
+    </div>
+  </body>
+</html>
