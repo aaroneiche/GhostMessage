@@ -27,11 +27,11 @@ web socket and server.
 # Running the Server
 Run the server by typing in the command line:
 ```
-node index.js /dev/port-name
+node index.js /dev/serial-port-name web-server-port
 ```
-The last argument is optional, it will default to ```/dev/ttyS0``` which is
+Arguments are options, the serial port will default to ```/dev/ttyS0``` which is
 a dummy port. You should use whatever serial connection your Serial device has
-registered as.
+registered as. The web server port will defaul to ```8080```.
 
 The default port is ```8080```. Once the server is running, you can go to
 ```http://localhost:8080``` and you should see the Ghost Message page with a

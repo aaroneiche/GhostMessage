@@ -1,6 +1,6 @@
 // 'use strict';
 
-var webport = 8080;
+var webport;
 // var portDevice = '/dev/ttyUSB1';
 var portDevice;
 
@@ -9,6 +9,9 @@ if(process.argv.length > 2){
 }else{
   portDevice = '/dev/ttyS0';
 }
+
+webport = (process.argv[3] != undefined)? process.argv[3] : 8080;
+
 console.log("Opening port on " + portDevice);
 const SerialPort = require('serialport');
 const port = new SerialPort(portDevice);
@@ -38,7 +41,7 @@ port.on('open', () => {
 app.post("/message", function(req,res,next){
 
   var m = req.body;
-
+  console.log("Message from " + req.connection.remoteAddress + ":  " +m.message);
   port.write(m.message);
   res.send("Message Sent!");
   wsServer.broadcast(JSON.stringify(m));
