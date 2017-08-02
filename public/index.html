@@ -6,6 +6,9 @@
       color = ["cyan","pink","red","orange"];
       s = new WebSocket("ws://"+location.hostname+":" + location.port);
 
+      var deadGhost = new Image();
+      deadGhost.src = "/images/dead2.gif";
+
       s.onopen = function(){
         console.log('Socket Open');
         $("#ghost").attr('src',"/images/red.gif").data('color','red');
@@ -35,8 +38,6 @@
 
       function switchGhost() {
         if(s.readyState == 1){
-
-          // var current = color.indexOf($("#ghost").attr('src').split("/")[1])
           var current = color.indexOf($("#ghost").data('color'));
           var next = (current == 3) ? color[0] : color[current + 1];
           $("#ghost").attr('src',"images/" + next + ".gif").data('color',next);

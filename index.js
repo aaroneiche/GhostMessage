@@ -38,11 +38,15 @@ port.on('open', () => {
   console.log('Connected to Serial Port.');
 });
 
+port.on('data', (data) => {
+  console.log(data.toString());
+});
+
 app.post("/message", function(req,res,next){
 
   var m = req.body;
   console.log("Message from " + req.connection.remoteAddress + ":  " +m.message);
-  port.write(m.message);
+  port.write(m.message + ";" + m.color);
   res.send("Message Sent!");
   wsServer.broadcast(JSON.stringify(m));
 
