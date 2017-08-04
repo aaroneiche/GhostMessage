@@ -18,7 +18,7 @@
 #define C   A2
 RGBmatrixPanel matrix(A, B, C, CLK, LAT, OE, false);
 
-const unsigned char PROGMEM ghost[] = 
+const unsigned char PROGMEM ghost[] =
 {
 B00000111,B10000000,
 B00011111,B11100000,
@@ -67,6 +67,9 @@ const uint16_t RED = matrix.ColorHSV(0, 100, 100, true);
 const uint16_t GREEN = 0x0080; //matrix.ColorHSV(0, 120, 90, true);
 const uint16_t BLUE = 0x0002;
 
+const uint16_t PINK = matrix.Color333(6,1,1);
+const uint16_t ORANGE = matrix.Color333(4,1,0);
+const uint16_t CYAN = matrix.Color333(0,2,1);
 
 bool toggle = true;
 bool dir = true;
@@ -79,24 +82,26 @@ long interval = 10000;
 
 String lastMessage = "";
 String sentMessage = "";
+String ghostColor = "orange";
 
+uint16_t GHOSTC = ORANGE;
 
 void drawGhost(int x, int y, uint16_t color, bool direction, bool skirt){
-  
+
   matrix.drawBitmap(x,y,ghost,14,14,color);
 
   if(direction){
     matrix.drawBitmap(x+3,y+3,eyeWhite,4,5,WHITE);
     matrix.drawBitmap(x+5,y+5,pupil,2,2,BLUE);
-    
+
     matrix.drawBitmap(x+9,y+3,eyeWhite,4,5,WHITE);
     matrix.drawBitmap(x+11,y+5,pupil,2,2,BLUE);
   }else{
     matrix.drawBitmap(x+1,y+3,eyeWhite,4,5,WHITE);
     matrix.drawBitmap(x+1,y+5,pupil,2,2,BLUE);
-    
+
     matrix.drawBitmap(x+7,y+3,eyeWhite,4,5,WHITE);
-    matrix.drawBitmap(x+7,y+5,pupil,2,2,BLUE);    
+    matrix.drawBitmap(x+7,y+5,pupil,2,2,BLUE);
   }
 
 
@@ -119,7 +124,7 @@ void setup() {
   matrix.begin();
   matrix.setTextWrap(false);
   matrix.setTextSize(1);
-  
+
   matrix.setTextColor(WHITE);
 
   matrix.setCursor(0,0);
@@ -127,10 +132,10 @@ void setup() {
   matrix.setCursor(0,9);
   matrix.print("Message");
   drawGhost(18,ghosty,GREEN,false,true);
-  
+
   delay(4000);
   matrix.fillScreen(0);
-  
+
 }
 
 void loop() {
@@ -138,24 +143,40 @@ void loop() {
   unsigned long currentMillis = millis();
 
   while (Serial.available() > 0) {
-    sentMessage = Serial.readString();
-    Serial.print("received:");
-    Serial.println(sentMessage);
+     sentMessage = Serial.readStringUntil(';');
+     ghostColor = Serial.readString();
+    Serial.print("Received Message: ");
+    Serial.print(sentMessage);
+    Serial.print("Color: ");
+    Serial.println(ghostColor);
+
+    if(ghostColor == "red"){
+      GHOSTC = RED;
+    }else if(ghostColor == "pink"){
+      GHOSTC = PINK;
+    }else if(ghostColor == "orange"){
+      GHOSTC = ORANGE;
+    }else if(ghostColor == "cyan"){
+      GHOSTC = CYAN;
+    }else{
+      GHOSTC = GREEN;
+    }
+
   }
 
   if(sentMessage != lastMessage){
-    
+
     messageWidth = sentMessage.length() * -6;
     matrix.fillScreen(0);
     toggle = (toggle) ? false: true;
-    drawGhost(ghostx,ghosty,RED,dir,toggle);
-  
+    drawGhost(ghostx,ghosty,GHOSTC,dir,toggle);
+
     if(dir == true){
       ghostx++;
     }else if(dir == false){
       ghostx--;
     }
-  
+
     if(!dir){
       drawMessage(ghostx + 15, 4, sentMessage);
     }
@@ -172,7 +193,7 @@ void loop() {
 
 
   if(previousMillis + interval > currentMillis){
-    
+
   }
 
 }
