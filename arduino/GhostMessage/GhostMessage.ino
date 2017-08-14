@@ -34,6 +34,92 @@ B11111111,B11111100,
 B11111111,B11111100,
 };
 
+const unsigned char PROGMEM pacClosed[] =
+{
+  B00001111,B10000000,
+  B00111111,B11100000,
+  B01111111,B11110000,
+  B01111111,B11110000,
+  B11111111,B11111000,
+  B11111111,B11111000,
+  B11111111,B11111000,
+  B11111111,B11111000,
+  B11111111,B11111000,
+  B01111111,B11110000,
+  B01111111,B11110000,
+  B00111111,B11100000,
+  B00001111,B10000000
+};
+
+
+const unsigned char PROGMEM pacMidRight[] =
+{
+  B00001111,B10000000,
+  B00111111,B11100000,
+  B01111111,B11110000,
+  B01111111,B11110000,
+  B11111111,B11000000,
+  B11111110,B00000000,
+  B11110000,B00000000,
+  B11111110,B00000000,
+  B11111111,B11000000,
+  B01111111,B11110000,
+  B01111111,B11110000,
+  B00111111,B11100000,
+  B00001111,B10000000,
+};
+
+  
+const unsigned char PROGMEM pacMidLeft[] = 
+{
+  B00011111,B00000000,
+  B01111111,B11000000,
+  B11111111,B11100000,
+  B11111111,B11100000,
+  B00111111,B11110000,
+  B00000111,B11110000,
+  B00000000,B11110000,
+  B00000111,B11110000,
+  B00111111,B11110000,
+  B11111111,B11100000,
+  B11111111,B11100000,
+  B01111111,B11000000,
+  B00011111,B00000000
+};
+
+const unsigned char PROGMEM pacOpenRight[] = 
+{
+  B00001111,B10000000,
+  B00111111,B10000000,
+  B01111111,B00000000,
+  B01111110,B00000000,
+  B11111100,B00000000,
+  B11111000,B00000000,
+  B11110000,B00000000,
+  B11111000,B00000000,
+  B11111100,B00000000,
+  B01111110,B00000000,
+  B01111111,B00000000,
+  B00111111,B10000000,
+  B00001111,B10000000
+};
+
+const unsigned char PROGMEM pacOpenLeft[] = 
+{
+  B00111111,B10000000,
+  B00011111,B11000000,
+  B00001111,B11000000,
+  B00000111,B11100000,
+  B00000011,B11100000,
+  B00000001,B11100000,
+  B00000011,B11100000,
+  B00000111,B11100000,
+  B00001111,B11000000,
+  B00011111,B11000000,
+  B00111111,B10000000,
+  B00111110,B00000000
+};
+
 const unsigned char PROGMEM skirtA[] =
 {
 B11011100,B11101100,
@@ -60,6 +146,9 @@ const unsigned char PROGMEM pupil[] = {
   B11000000
 };
 
+
+
+
 //const uint16_t BLUE = matrix.Color444(0,0,120);
 const uint16_t WHITE = matrix.ColorHSV(0, 0, 90, true);
 const uint16_t RED = matrix.ColorHSV(0, 100, 100, true);
@@ -70,6 +159,8 @@ const uint16_t BLUE = 0x0002;
 const uint16_t PINK = matrix.Color333(6,1,1);
 const uint16_t ORANGE = matrix.Color333(4,1,0);
 const uint16_t CYAN = matrix.Color333(0,2,1);
+
+const uint16_t YELLOW = matrix.Color333(2,1,0);
 
 bool toggle = true;
 bool dir = true;
@@ -83,6 +174,12 @@ long interval = 10000;
 String lastMessage = "";
 String sentMessage = "";
 String ghostColor = "orange";
+
+const int PAC_OPEN_LEFT = 1;
+const int PAC_MID_LEFT = 2;
+const int PAC_CLOSED = 3;
+
+
 
 uint16_t GHOSTC = ORANGE;
 
@@ -119,6 +216,22 @@ void drawMessage(int x, int y, String message){ //char *message
   matrix.print(message);
 }
 
+
+void drawPacman(int x, int y, int state) {
+
+  if(state == PAC_OPEN_LEFT) {
+    matrix.drawBitmap(x,y,pacOpenLeft,11,12,YELLOW);
+  }else if(state == PAC_MID_LEFT) {
+    matrix.drawBitmap(x,y,pacMidLeft,12,13,YELLOW);
+  }else if(state == PAC_CLOSED){
+    matrix.drawBitmap(x,y,pacClosed,13,13,YELLOW);
+  }
+  
+}
+
+
+int pacPos = 33;
+
 void setup() {
   Serial.begin(9600);
   matrix.begin();
@@ -127,13 +240,37 @@ void setup() {
 
   matrix.setTextColor(WHITE);
 
+//  matrix.setCursor(0,0);
+//  matrix.print("Ghost");
+//  matrix.setCursor(0,9);
+//  matrix.print("Message");
+//  drawGhost(18,ghosty,GREEN,false,true);
+
+  
+  for(int i = 0; i <= 3; i++) {
+    matrix.fillScreen(0);
+    matrix.setCursor(0,0);
+    matrix.print("Ghost");
+    matrix.setCursor(0,9);
+    matrix.print("Message");
+    drawPacman(pacPos,3,i);
+    delay(65);
+    if(i == 3){
+      i = 0;
+    }
+    if(pacPos < -12){
+      break;
+    }
+    pacPos--;
+  }
+
+  matrix.fillScreen(0);
   matrix.setCursor(0,0);
   matrix.print("Ghost");
   matrix.setCursor(0,9);
   matrix.print("Message");
-  drawGhost(18,ghosty,GREEN,false,true);
-
-  delay(4000);
+  delay(2000);
+  
   matrix.fillScreen(0);
 
 }
@@ -143,11 +280,11 @@ void loop() {
   unsigned long currentMillis = millis();
 
   while (Serial.available() > 0) {
-     sentMessage = Serial.readStringUntil(';');
-     ghostColor = Serial.readString();
+    sentMessage = Serial.readStringUntil(';');
+    ghostColor = Serial.readStringUntil('\n');
     Serial.print("Received Message: ");
     Serial.print(sentMessage);
-    Serial.print("Color: ");
+    Serial.print(" Color: ");
     Serial.println(ghostColor);
 
     if(ghostColor == "red"){
@@ -161,7 +298,6 @@ void loop() {
     }else{
       GHOSTC = GREEN;
     }
-
   }
 
   if(sentMessage != lastMessage){

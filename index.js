@@ -39,13 +39,18 @@ port.on('open', () => {
 });
 
 port.on('data', (data) => {
-  console.log(data.toString());
+
+  console.log("Response from Hardware: " + data.toString());
 });
+
+port.on('error',(e) => {
+  console.error(e);
+})
 
 app.post("/message", function(req,res,next){
 
   var m = req.body;
-  console.log("Message from " + req.connection.remoteAddress + ":  " +m.message);
+  console.log("Message from " + req.connection.remoteAddress + ":  " +m.message + " Color:" + m.color );
   port.write(m.message + ";" + m.color);
   res.send("Message Sent!");
   wsServer.broadcast(JSON.stringify(m));
@@ -59,7 +64,6 @@ wsServer.broadcast = function broadcast(data) {
     }
   });
 };
-
 
 wsServer.on('connection',(ws,req)=>{
   console.log("User Connected: ", ws._socket.remoteAddress);
