@@ -168,18 +168,22 @@ int ghostx = -14;
 int ghosty = 1;
 int messageWidth = 0;
 
+int pacx = 32;
+int pacy = 3;
+
 unsigned long previousMillis = 0;
-long interval = 10000;
+const long interval = 10000;
 
 String lastMessage = "";
-String sentMessage = "";
+String sentMessage = "Ghost Message!";
 String ghostColor = "orange";
 
 const int PAC_OPEN_LEFT = 1;
 const int PAC_MID_LEFT = 2;
 const int PAC_CLOSED = 3;
 
-
+bool playingLastMessage = false;
+int lastPacState = 1;
 
 uint16_t GHOSTC = ORANGE;
 
@@ -281,7 +285,8 @@ void loop() {
 
   while (Serial.available() > 0) {
     sentMessage = Serial.readStringUntil(';');
-    ghostColor = Serial.readStringUntil('\n');
+    ghostColor = Serial.readStringUntil(';');
+//    ghostColor = Serial.readString();
     Serial.print("Received Message: ");
     Serial.print(sentMessage);
     Serial.print(" Color: ");
@@ -301,7 +306,7 @@ void loop() {
   }
 
   if(sentMessage != lastMessage){
-
+    
     messageWidth = sentMessage.length() * -6;
     matrix.fillScreen(0);
     toggle = (toggle) ? false: true;
@@ -324,12 +329,36 @@ void loop() {
       ghostx = -14;
       lastMessage = sentMessage;
     }
+    
+    previousMillis = currentMillis;
     delay(50);
   }
 
+  if(playingLastMessage) {
+    matrix.fillScreen(0);
+    drawPacman(pacx, pacy, lastPacState);
+    drawMessage(pacx + 14, 4, lastMessage);
+    lastPacState = (lastPacState == 3) ? 1 : lastPacState + 1;
+    pacx--;
 
-  if(previousMillis + interval > currentMillis){
+    
+    
+    if(pacx - 13 < sentMessage.length() * -6 ){
+      pacx = 33;
+      playingLastMessage = false;  
+    }
+    delay(65);
+    
+  }
 
+  if(currentMillis > previousMillis + interval){
+//    Serial.print(previousMillis);
+//    Serial.print("  ");
+//    Serial.print(currentMillis);
+    //Serial.println("Timer reached! Message to play.");
+    playingLastMessage = true;
+
+    previousMillis = currentMillis;
   }
 
 }
