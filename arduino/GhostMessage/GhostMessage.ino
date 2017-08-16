@@ -167,25 +167,31 @@ bool dir = true;
 int ghostx = -14;
 int ghosty = 1;
 int messageWidth = 0;
+int lastMessageWidth = 0;
+
+int pacx = 32;
+int pacy = 2;
 
 unsigned long previousMillis = 0;
-long interval = 10000;
+const long interval = 300000;
+//
 
 String lastMessage = "";
-String sentMessage = "";
+String sentMessage = "Ghost Message!";
 String ghostColor = "orange";
 
 const int PAC_OPEN_LEFT = 1;
 const int PAC_MID_LEFT = 2;
 const int PAC_CLOSED = 3;
 
-
+bool playingLastMessage = false;
+int lastPacState = 1;
 
 uint16_t GHOSTC = ORANGE;
 
 void drawGhost(int x, int y, uint16_t color, bool direction, bool skirt){
 
-  matrix.drawBitmap(x,y,ghost,14,14,color);
+  matrix.drawBitmap(x,y,ghost,14,12,color);
 
   if(direction){
     matrix.drawBitmap(x+3,y+3,eyeWhite,4,5,WHITE);
@@ -239,13 +245,6 @@ void setup() {
   matrix.setTextSize(1);
 
   matrix.setTextColor(WHITE);
-
-//  matrix.setCursor(0,0);
-//  matrix.print("Ghost");
-//  matrix.setCursor(0,9);
-//  matrix.print("Message");
-//  drawGhost(18,ghosty,GREEN,false,true);
-
   
   for(int i = 0; i <= 3; i++) {
     matrix.fillScreen(0);
@@ -253,7 +252,7 @@ void setup() {
     matrix.print("Ghost");
     matrix.setCursor(0,9);
     matrix.print("Message");
-    drawPacman(pacPos,3,i);
+    drawPacman(pacPos,2,i);
     delay(65);
     if(i == 3){
       i = 0;
@@ -270,7 +269,8 @@ void setup() {
   matrix.setCursor(0,9);
   matrix.print("Message");
   delay(2000);
-  
+
+  pacx = 30;
   matrix.fillScreen(0);
 
 }
@@ -281,7 +281,13 @@ void loop() {
 
   while (Serial.available() > 0) {
     sentMessage = Serial.readStringUntil(';');
-    ghostColor = Serial.readStringUntil('\n');
+    ghostColor = Serial.readStringUntil(';');
+
+    if(sentMessage == "t"){
+      playingLastMessage = true;
+      sentMessage = lastMessage;
+    }
+
     Serial.print("Received Message: ");
     Serial.print(sentMessage);
     Serial.print(" Color: ");
@@ -301,7 +307,7 @@ void loop() {
   }
 
   if(sentMessage != lastMessage){
-
+    
     messageWidth = sentMessage.length() * -6;
     matrix.fillScreen(0);
     toggle = (toggle) ? false: true;
@@ -314,7 +320,7 @@ void loop() {
     }
 
     if(!dir){
-      drawMessage(ghostx + 15, 4, sentMessage);
+      drawMessage(ghostx + 16, 4, sentMessage);
     }
 
     if(ghostx > matrix.width() && dir == true){
@@ -324,12 +330,34 @@ void loop() {
       ghostx = -14;
       lastMessage = sentMessage;
     }
+    
+    previousMillis = currentMillis;
     delay(50);
   }
 
+  if(playingLastMessage) {
+    lastMessageWidth = lastMessage.length() * -6;
+    
+    matrix.fillScreen(0);
+    drawPacman(pacx, pacy, lastPacState);
+    drawMessage(pacx + 15, 4, lastMessage);
+    lastPacState = (lastPacState == 3) ? 1 : lastPacState + 1;
+    pacx--;
 
-  if(previousMillis + interval > currentMillis){
 
+    messageWidth = sentMessage.length() * -6;
+    if(pacx < lastMessageWidth -14  -matrix.width()){
+      pacx = 33;
+      playingLastMessage = false;  
+    }
+    delay(65);
+    
+  }
+
+  if(currentMillis > previousMillis + interval){
+    playingLastMessage = true;
+
+    previousMillis = currentMillis;
   }
 
 }
