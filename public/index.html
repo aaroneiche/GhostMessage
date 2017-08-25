@@ -67,6 +67,32 @@
       }
     </script>
     <style>
+      body {
+        background-color: black;
+        color: yellow;
+        font-family: "Joystix";
+      }
+
+      @font-face {
+        font-family: 'Joystix';
+        src: url('joystix.ttf') format('truetype');
+      }
+
+      form {
+        margin-top: 20px;
+      }
+
+      #message {
+        background-color: black;
+        color: yellow;
+        border: solid blue 2px;
+        outline: none;
+        font-family: "Joystix";
+        font-size: 16pt;
+        border-radius: 12px;
+        padding: 4px;
+      }
+
       #center {
         display: flex;
         flex-direction: column;
@@ -146,7 +172,8 @@
   <body>
 
     <div id="center">
-      <h3>Ghost Message!</h3>
+      <!-- <h3>Ghost Message!</h3> -->
+      <img src="images/GhostMessage.png" />
       <form onsubmit="sendMessage(); return false;">
         <input id="message" />
         <input type="submit" value="Send message" />
