@@ -9,6 +9,7 @@
 
 #include <Adafruit_GFX.h>   // Core graphics library
 #include <RGBmatrixPanel.h> // Hardware-specific library
+#include "joystix10.h"
 
 #define CLK 8  // MUST be on PORTB! (Use pin 11 on Mega)
 #define LAT 10
@@ -217,8 +218,8 @@ void drawGhost(int x, int y, uint16_t color, bool direction, bool skirt){
 
 
 void drawMessage(int x, int y, String message){ //char *message
-  matrix.setCursor(x, y);
-  matrix.setTextColor(GREEN);
+  matrix.setCursor(x, y + 10);
+  matrix.setTextColor(WHITE);
   matrix.print(message);
 }
 
@@ -273,6 +274,17 @@ void setup() {
   pacx = 30;
   matrix.fillScreen(0);
 
+  //Set the Font to Joystix
+  matrix.setFont(&joystix10pt7b);
+
+//  for(int a = 0; a < 16; a++){
+//    matrix.setCursor(0,a);
+//    matrix.print("Test");
+//    Serial.println(a);
+//    delay(700);
+//    matrix.fillScreen(0);
+//  }
+  
 }
 
 void loop() {
@@ -308,7 +320,7 @@ void loop() {
 
   if(sentMessage != lastMessage){
     
-    messageWidth = sentMessage.length() * -6;
+    messageWidth = sentMessage.length() * -16;
     matrix.fillScreen(0);
     toggle = (toggle) ? false: true;
     drawGhost(ghostx,ghosty,GHOSTC,dir,toggle);
@@ -336,7 +348,7 @@ void loop() {
   }
 
   if(playingLastMessage) {
-    lastMessageWidth = lastMessage.length() * -6;
+    lastMessageWidth = lastMessage.length() * -16;
     
     matrix.fillScreen(0);
     drawPacman(pacx, pacy, lastPacState);
@@ -345,7 +357,7 @@ void loop() {
     pacx--;
 
 
-    messageWidth = sentMessage.length() * -6;
+    messageWidth = sentMessage.length() * -16;
     if(pacx < lastMessageWidth -14  -matrix.width()){
       pacx = 33;
       playingLastMessage = false;  
